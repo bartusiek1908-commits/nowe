@@ -1,9 +1,8 @@
--- Cool Shop UI with Draggable + Custom Image Toggle Button (Delta Ready)
+-- Fixed: Your REAL Steam image + tiny top-right draggable toggle
 
-local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-
+local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -12,32 +11,26 @@ screenGui.Name = "CoolShop"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- ==================== MAIN UI WINDOW ====================
+-- Main window (hidden at start)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 500, 0, 350)
-mainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-mainFrame.BorderSizePixel = 0
+mainFrame.Size = UDim2.new(0,500,0,350)
+mainFrame.Position = UDim2.new(0.5,-250,0.5,-175)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 mainFrame.Visible = false
+mainFrame.ClipsDescendants = true
 mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0,14)
 
-local mfCorner = Instance.new("UICorner")
-mfCorner.CornerRadius = UDim.new(0, 14)
-mfCorner.Parent = mainFrame
-
--- Title bar
+-- Titlebar + close button
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+titleBar.Size = UDim2.new(1,0,0,40)
+titleBar.BackgroundColor3 = Color3.fromRGB(15,15,15)
 titleBar.Parent = mainFrame
-
-local tbCorner = Instance.new("UICorner")
-tbCorner.CornerRadius = UDim.new(0, 14)
-tbCorner.Parent = titleBar
+Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0,14)
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -100, 1, 0)
-title.Position = UDim2.new(0, 15, 0, 0)
+title.Size = UDim2.new(1,-100,1,0)
+title.Position = UDim2.new(0,15,0,0)
 title.BackgroundTransparency = 1
 title.Text = "Cool Shop"
 title.TextColor3 = Color3.new(1,1,1)
@@ -46,142 +39,56 @@ title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = titleBar
 
--- Close button
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 40, 0, 40)
-closeBtn.Position = UDim2.new(1, -40, 0, 0)
-closeBtn.BackgroundColor3 = Color3.fromRGB(220, 30, 30)
+closeBtn.Size = UDim2.new(0,40,0,40)
+closeBtn.Position = UDim2.new(1,-40,0,0)
+closeBtn.BackgroundColor3 = Color3.fromRGB(220,30,30)
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.new(1,1,1)
 closeBtn.TextScaled = true
-closeBtn.Font = Enum.Font.GothamBold
 closeBtn.Parent = titleBar
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0,14)
 
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 14)
+-- TINY TOP-RIGHT TOGGLE WITH YOUR EXACT STEAM IMAGE
+local toggle = Instance.new("ImageButton")
+toggle.Size = UDim2.new(0,52,0,52)                         -- perfect small size
+toggle.Position = UDim2.new(1,-67,0,15)                    -- classic top-right spot
+toggle.BackgroundTransparency = 1
+toggle.Image = "https://images.steamusercontent.com/ugc/2008096370820324587/2E1CD0D89E1415A4FEE33581971A40F3A27F3101/"  -- YOUR Law image
+toggle.Parent = screenGui
 
--- Content area (add your stuff here)
-local content = Instance.new("Frame")
-content.Size = UDim2.new(1, 0, 1, -40)
-content.Position = UDim2.new(0, 0, 0, 40)
-content.BackgroundTransparency = 1
-content.Parent = mainFrame
+Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)  -- circle
 
--- Example label
-local ex = Instance.new("TextLabel")
-ex.Size = UDim2.new(1, -20, 0, 60)
-ex.Position = UDim2.new(0, 10, 0, 20)
-ex.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-ex.Text = "Your script UI works! Drag the icon to move it!"
-ex.TextColor3 = Color3.new(1,1,1)
-ex.TextScaled = true
-ex.Parent = content
-Instance.new("UICorner", ex).CornerRadius = UDim.new(0, 10)
+-- Soft shadow
+local shadow = Instance.new("ImageLabel")
+shadow.Size = UDim2.new(1.4,0,1.4,0)
+shadow.Position = UDim2.new(-0.2,0,-0.2,0)
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://5554236805"
+shadow.ImageColor3 = Color3.new(0,0,0)
+shadow.ImageTransparency = 0.65
+shadow.ZIndex = -1
+shadow.Parent = toggle
 
--- ==================== DRAGGABLE TOGGLE BUTTON WITH IMAGE ====================
+-- DRAGGABLE TOGGLE (100% working)
+local dragging = false
+local dragInput, dragStart, startPos
 
-local toggleButton = Instance.new("ImageButton")  -- Now it's an ImageButton!
-toggleButton.Size = UDim2.new(0, 70, 0, 70)
-toggleButton.Position = UDim2.new(0, 20, 0.5, -35)  -- Default position
-toggleButton.BackgroundTransparency = 1
-toggleButton.Image = "rbxassetid://18312751269"  -- Default icon (cool glowing circle)
-toggleButton.Parent = screenGui
-
--- CHANGE THIS ID TO ANY IMAGE YOU WANT:
--- toggleButton.Image = "https://images.steamusercontent.com/ugc/2008096370820324587/2E1CD0D89E1415A4FEE33581971A40F3A27F3101/?imw=637&imh=358&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true"  -- Put your own image ID here!
-
-local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(1, 0)  -- Full round
-btnCorner.Parent = toggleButton
-
-local glow = Instance.new("ImageLabel")
-glow.Size = UDim2.new(1.3, 0, 1.3, 0)
-glow.Position = UDim2.new(-0.15, 0, -0.15, 0)
-glow.BackgroundTransparency = 1
-glow.Image = "rbxassetid://18312751269"
-glow.ImageColor3 = Color3.fromRGB(255, 100, 255)
-glow.ImageTransparency = 0.6
-glow.ZIndex = toggleButton.ZIndex - 1
-glow.Parent = toggleButton
-
--- Make toggle button draggable
-local draggingToggle = false
-local dragInputToggle, dragStartToggle, startPosToggle
-
-toggleButton.InputBegan:Connect(function(input)
+toggle.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        draggingToggle = true
-        dragStartToggle = input.Position
-        startPosToggle = toggleButton.Position
-
+        dragging = true
+        dragStart = input.Position
+        startPos = toggle.Position
+        
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                draggingToggle = false
+                dragging = false
             end
         end)
     end
 end)
 
-toggleButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInputToggle = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if draggingToggle and input == dragInputToggle then
-        local delta = input.Position - dragStartToggle
-        toggleButton.Position = UDim2.new(
-            startPosToggle.X.Scale,
-            startPosToggle.X.Offset + delta.X,
-            startPosToggle.Y.Scale,
-            startPosToggle.Y.Offset + delta.Y
-        )
-    end
-end)
-
--- ==================== TOGGLE LOGIC ====================
-local isOpen = false
-
-local function toggle()
-    isOpen = not isOpen
-
-    if isOpen then
-        mainFrame.Visible = true
-        TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
-            Position = UDim2.new(0.5, -250, 0.5, -175)
-        }):Play()
-    else
-        TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {
-            Position = UDim2.new(0.5, -250, 1.2, 0)
-        }):Play()
-        task.wait(0.4)
-        mainFrame.Visible = false
-    end
-end
-
-toggleButton.MouseButton1Click:Connect(toggle)
-closeBtn.MouseButton1Click:Connect(toggle)
-
--- Optional: Insert key to toggle
-UserInputService.InputBegan:Connect(function(key)
-    if key.KeyCode == Enum.KeyCode.Insert then
-        toggle()
-    end
-end)
-
--- ==================== DRAG MAIN WINDOW (title bar only) ====================
-local dragging = false
-local dragInput, dragStart, startPos
-
-titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-    end
-end)
-
-titleBar.InputChanged:Connect(function(input)
+toggle.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then
         dragInput = input
     end
@@ -190,11 +97,33 @@ end)
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input == dragInput then
         local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-    if input.UserInputState == Enum.UserInputState.End then
-        dragging = false
+        toggle.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                   startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
-print("UI Loaded! Drag the icon anywhere · Change toggleButton.Image to your own picture!")
+-- Toggle open/close
+local open = false
+local function ToggleUI()
+    open = not open
+    if open then
+        mainFrame.Visible = true
+        TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), 
+            {Position = UDim2.new(0.5,-250,0.5,-175)}):Play()
+    else
+        TweenService:Create(mainFrame, TweenInfo.new(0.35), 
+            {Position = UDim2.new(0.5,-250,1.2,0)}):Play()
+        task.wait(0.4)
+        mainFrame.Visible = false
+    end
+end
+
+toggle.MouseButton1Click:Connect(ToggleUI)
+closeBtn.MouseButton1Click:Connect(ToggleUI)
+
+-- Insert key
+UserInputService.InputBegan:Connect(function(k)
+    if k.KeyCode == Enum.KeyCode.Insert then ToggleUI() end
+end)
+
+print("Loaded with YOUR Steam Law image — top-right 52×52 draggable toggle")
