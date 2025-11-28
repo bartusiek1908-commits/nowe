@@ -88,10 +88,7 @@ local Button = Tab:CreateButton({
       print("Powrót na poprzednią pozycję zakończony.")
    end,
 })
-
    -- The function that takes place when the button is pressed
-   end,
-})
 local Divider = Tab:CreateDivider()
 
 Rayfield:LoadConfiguration()
